@@ -4,6 +4,15 @@
     <title>
         tuvala sim
     </title>
+    <!-- CSS only -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+
+    <!-- JS, Popper.js, and jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+
+
     <script>
         var levelNames = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "PRI", "DUO", "TRI", "TET", "PEN"];
         var chances = [
@@ -67,7 +76,14 @@
         }
 
         var failSlots = [0, 0, 0, 0, 0, 0];
-        var createdFailstack = [];
+        var createdFailstack = {
+            10: 0,
+            15: 0,
+            20: 0,
+            30: 0,
+            40: 0,
+            60: 0
+        };
 
         function findFailstack(level) {
             optimal = optimalFailstacks[level]
@@ -80,7 +96,7 @@
                 if (emptySlot == -1 && failSlots[i] == 0) {
                     emptySlot = i
                 }
-                if (failSlots[i] >= optimal && failSlots[i] < optimal + 15) {
+                if (failSlots[i] >= optimal && failSlots[i] < optimal * 1.5) {
                     perfectSlot = i;
                 }
                 if (Math.abs(failSlots[i] - optimal) < Math.abs(failSlots[bestSlot] - optimal)) {
@@ -94,7 +110,7 @@
 
             if (emptySlot > -1) {
                 failSlots[emptySlot] = optimal;
-                createdFailstack.push(optimal);
+                createdFailstack[optimal] += 1;
                 return emptySlot;
             }
 
@@ -109,16 +125,21 @@
             item = 15;
             blackstones = 0;
             currentSlot = 0;
-            attempts = [];
+            attempts = [
+                [
+                    levelNames[item], blackstones, [0, 0, 0, 0, 0, 0],
+                ]
+            ];
             while (item < levelNames.indexOf("PEN")) {
                 currentSlot = findFailstack(item + 1);
                 v = enhance(item, failSlots[currentSlot]);
                 item = v[0];
                 cost = v[1];
                 failSlots[currentSlot] = v[2];
+                sucess = v[3];
                 blackstones += cost;
                 failSlotsState = [...failSlots]
-                attempts.push([levelNames[item], failSlotsState, blackstones]);
+                attempts.push([levelNames[item], blackstones, failSlotsState, sucess]);
             }
 
             if (min == 0 || blackstones < min) {
@@ -128,10 +149,28 @@
                 max = blackstones
             }
             document.write("time-filled blackstones: " + blackstones + "<br>");
-            document.write("failstacks needed: " + createdFailstack + "<br><br>");
-            document.write("<table><tr><th>level</th><th>failstacks</th><th>blackstones</th></tr>")
+            document.write("failstacks needed: " + JSON.stringify(createdFailstack) + "<br><br>");
+            document.write("<table class=table><tr><th>item level</th><th>blackstones used</th><th>failstacks</th></tr>")
             for (k = 0; k < attempts.length; k++) {
-                document.write("<tr>");
+                switch (attempts[k][0]) {
+                    case "PRI":
+                    case "DUO":
+                        c = "bg-light";
+                        break;
+                    case "TRI":
+                        c = "bg-success";
+                        break;
+                    case "TET":
+                        c = "bg-primary";
+                        break;
+                    case "PEN":
+                        c = "bg-warning";
+                        break;
+                    default:
+                        c = "bg-light";
+                        break;
+                }
+                document.write("<tr class=" + c + ">");
                 document.write("<td>" + attempts[k][0] + "</td>");
                 document.write("<td>" + attempts[k][1] + "</td>");
                 document.write("<td>" + attempts[k][2] + "</td>");
@@ -139,8 +178,6 @@
             }
             document.write("</table><br>")
         }
-
-        document.write("min: " + min + ",  max: ", max + "<br>");
     </script>
 </head>
 
