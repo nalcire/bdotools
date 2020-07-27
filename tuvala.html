@@ -97,7 +97,13 @@
                     emptySlot = i
                 }
                 if (failSlots[i] >= optimal && failSlots[i] < optimal * 1.5) {
-                    perfectSlot = i;
+                    if (perfectSlot > -1) {
+                        if (failSlots[i] > failSlots[perfectSlot]) {
+                            perfectSlot = i;
+                        }
+                    } else {
+                        perfectSlot = i;
+                    }
                 }
                 if (Math.abs(failSlots[i] - optimal) < Math.abs(failSlots[bestSlot] - optimal)) {
                     bestSlot = i
