@@ -1,0 +1,151 @@
+<html>
+
+<head>
+    <title>
+        tuvala sim
+    </title>
+    <script>
+        var levelNames = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "PRI", "DUO", "TRI", "TET", "PEN"];
+        var chances = [
+            [1, 0],
+            [1, 0],
+            [1, 0],
+            [1, 0],
+            [1, 0],
+            [0.7, 0.018],
+            [0.7, 0.016],
+            [0.7, 0.014],
+            [0.6, 0.06],
+            [0.5, 0.05],
+            [0.3, 0.03],
+            [0.2, 0.02],
+            [0.05, 0.015],
+            [0.1, 0.01],
+            [0.08, 0.008],
+            [0.17, 0.017],
+            [0.12, 0.012],
+            [0.08, 0.008],
+            [0.05, 0.005],
+            [0.03, 0.003],
+        ];
+        var enhanceCost = [
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+            10, 10, 15, 15, 15
+        ]
+        var optimalFailstacks = [
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10, 10, 15, 15, 15,
+            15, 20, 30, 40, 60
+        ];
+        var failstackIncreases = [
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            2, 3, 4, 5, 6,
+        ];
+
+        function getTuvalaChance(level, failstacks) {
+            return chances[level][0] + chances[level][1] * failstacks;
+        }
+
+        function enhance(level, failstacks) {
+            if (level == 19) {
+                return [19, 0];
+            }
+
+            fsInc = failstackIncreases[level];
+            cost = enhanceCost[level];
+            check = getTuvalaChance(level + 1, failstacks);
+            roll = Math.random();
+
+            if (check > roll) {
+                return [level + 1, cost, 0];
+            }
+
+            if (level > 15) {
+                return [level - 1, cost, failstacks + fsInc];
+            }
+
+            return [level, cost, failstacks + fsInc];
+        }
+
+        var failSlots = [0, 0, 0, 0, 0, 0];
+        var createdFailstack = [];
+
+        function findFailstack(level) {
+            optimal = optimalFailstacks[level]
+            perfectSlot = -1;
+            emptySlot = -1;
+            bestSlot = 0;
+            var i = 0;
+
+            for (i = 0; i < failSlots.length; i++) {
+                if (emptySlot == -1 && failSlots[i] == 0) {
+                    emptySlot = i
+                }
+                if (failSlots[i] >= optimal && failSlots[i] < optimal + 15) {
+                    perfectSlot = i;
+                }
+                if (Math.abs(failSlots[i] - optimal) < Math.abs(failSlots[bestSlot] - optimal)) {
+                    bestSlot = i
+                }
+            }
+
+            if (perfectSlot > -1) {
+                return perfectSlot;
+            }
+
+            if (emptySlot > -1) {
+                failSlots[emptySlot] = optimal;
+                createdFailstack.push(optimal);
+                return emptySlot;
+            }
+
+            return bestSlot;
+        }
+
+        var min = 0;
+        var max = 0;
+        var i = 0;
+
+        for (i = 0; i < 1; i++) {
+            item = 15;
+            blackstones = 0;
+            currentSlot = 0;
+            attempts = [];
+            while (item < levelNames.indexOf("PEN")) {
+                currentSlot = findFailstack(item + 1);
+                v = enhance(item, failSlots[currentSlot]);
+                item = v[0];
+                cost = v[1];
+                failSlots[currentSlot] = v[2];
+                blackstones += cost;
+                failSlotsState = [...failSlots]
+                attempts.push([levelNames[item], failSlotsState, blackstones]);
+            }
+
+            if (min == 0 || blackstones < min) {
+                min = blackstones
+            }
+            if (max == 0 || blackstones > max) {
+                max = blackstones
+            }
+            document.write("time-filled blackstones: " + blackstones + "<br>");
+            document.write("failstacks needed: " + createdFailstack + "<br><br>");
+            document.write("<table><tr><th>level</th><th>failstacks</th><th>blackstones</th></tr>")
+            for (k = 0; k < attempts.length; k++) {
+                document.write("<tr>");
+                document.write("<td>" + attempts[k][0] + "</td>");
+                document.write("<td>" + attempts[k][1] + "</td>");
+                document.write("<td>" + attempts[k][2] + "</td>");
+                document.write("</tr>");
+            }
+            document.write("</table><br>")
+        }
+
+        document.write("min: " + min + ",  max: ", max + "<br>");
+    </script>
+</head>
+
+<body>
+
+</body>
+
+</html>
