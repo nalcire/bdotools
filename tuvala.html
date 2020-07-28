@@ -96,7 +96,7 @@
                 if (emptySlot == -1 && failSlots[i] == 0) {
                     emptySlot = i
                 }
-                if (failSlots[i] >= optimal && failSlots[i] < optimal * 1.5) {
+                if (failSlots[i] >= optimal && failSlots[i] < optimal * 1.7) {
                     if (perfectSlot > -1) {
                         if (failSlots[i] > failSlots[perfectSlot]) {
                             perfectSlot = i;
@@ -123,72 +123,124 @@
             return bestSlot;
         }
 
-        var min = 0;
-        var max = 0;
-        var i = 0;
+        function runSim(count) {
+            document.getElementById('output').innerHTML = "";
+            failSlots = [0, 0, 0, 0, 0, 0];
+            createdFailstack = {
+                10: 0,
+                15: 0,
+                20: 0,
+                30: 0,
+                40: 0,
+                60: 0
+            };
+            sumFailstacks = {
+                10: 0,
+                15: 0,
+                20: 0,
+                30: 0,
+                40: 0,
+                60: 0
+            };
+            sumBlackstones = 0;
+            multiDetail = "";
 
-        for (i = 0; i < 1; i++) {
-            item = 15;
-            blackstones = 0;
-            currentSlot = 0;
-            attempts = [
-                [
-                    levelNames[item], blackstones, [0, 0, 0, 0, 0, 0],
-                ]
-            ];
-            while (item < levelNames.indexOf("PEN")) {
-                currentSlot = findFailstack(item + 1);
-                v = enhance(item, failSlots[currentSlot]);
-                item = v[0];
-                cost = v[1];
-                failSlots[currentSlot] = v[2];
-                sucess = v[3];
-                blackstones += cost;
-                failSlotsState = [...failSlots]
-                attempts.push([levelNames[item], blackstones, failSlotsState, sucess]);
-            }
+            var i = 0;
+            for (i = 0; i < count; i++) {
+                item = 15;
 
-            if (min == 0 || blackstones < min) {
-                min = blackstones
-            }
-            if (max == 0 || blackstones > max) {
-                max = blackstones
-            }
-            document.write("time-filled blackstones: " + blackstones + "<br>");
-            document.write("failstacks needed: " + JSON.stringify(createdFailstack) + "<br><br>");
-            document.write("<table class=table><tr><th>item level</th><th>blackstones used</th><th>failstacks</th></tr>")
-            for (k = 0; k < attempts.length; k++) {
-                switch (attempts[k][0]) {
-                    case "PRI":
-                    case "DUO":
-                        c = "bg-light";
-                        break;
-                    case "TRI":
-                        c = "bg-success";
-                        break;
-                    case "TET":
-                        c = "bg-primary";
-                        break;
-                    case "PEN":
-                        c = "bg-warning";
-                        break;
-                    default:
-                        c = "bg-light";
-                        break;
+                blackstones = 0;
+                currentSlot = 0;
+                attempts = [
+                    [
+                        levelNames[item], blackstones, [0, 0, 0, 0, 0, 0],
+                    ]
+                ];
+                while (item < levelNames.indexOf("PEN")) {
+                    currentSlot = findFailstack(item + 1);
+                    v = enhance(item, failSlots[currentSlot]);
+                    item = v[0];
+                    cost = v[1];
+                    failSlots[currentSlot] = v[2];
+                    sucess = v[3];
+                    blackstones += cost;
+                    failSlotsState = [...failSlots]
+                    attempts.push([levelNames[item], blackstones, failSlotsState, sucess]);
                 }
-                document.write("<tr class=" + c + ">");
-                document.write("<td>" + attempts[k][0] + "</td>");
-                document.write("<td>" + attempts[k][1] + "</td>");
-                document.write("<td>" + attempts[k][2] + "</td>");
-                document.write("</tr>");
+
+                if (count == 1) {
+                    document.getElementById('output').innerHTML += "<div class='row p-3'><div class='col'>time-filled blackstones: " + blackstones + "</div><div class='col'>failstacks needed: " + JSON.stringify(createdFailstack) + "<div></div>";
+                    details = "<div class='row'><table class=table><tr><th>item level</th><th>blackstones used</th><th>failstacks</th></tr>";
+                    for (k = 0; k < attempts.length; k++) {
+                        switch (attempts[k][0]) {
+                            case "PRI":
+                            case "DUO":
+                                c = "bg-light";
+                                break;
+                            case "TRI":
+                                c = "bg-success";
+                                break;
+                            case "TET":
+                                c = "bg-primary";
+                                break;
+                            case "PEN":
+                                c = "bg-warning";
+                                break;
+                            default:
+                                c = "bg-light";
+                                break;
+                        }
+                        details += "<tr class=" + c + ">";
+                        details += "<td>" + attempts[k][0] + "</td>";
+                        details += "<td>" + attempts[k][1] + "</td>";
+                        details += "<td>" + attempts[k][2] + "</td>";
+                        details += "</tr>";
+                    }
+
+                    details += "</table></div>";
+                    document.getElementById('output').innerHTML += details;
+                } else {
+                    multiDetail += "<div class='row p-3'><div class='col'>time-filled blackstones: " + blackstones + "</div><div class='col'>failstacks needed: " + JSON.stringify(createdFailstack) + "</div></div>";
+                }
+
+                sumBlackstones += blackstones;
+                sumFailstacks[10] += createdFailstack[10];
+                sumFailstacks[15] += createdFailstack[15];
+                sumFailstacks[20] += createdFailstack[20];
+                sumFailstacks[30] += createdFailstack[30];
+                sumFailstacks[40] += createdFailstack[40];
+                sumFailstacks[60] += createdFailstack[60];
             }
-            document.write("</table><br>")
+
+            document.getElementById('output').innerHTML += "<div class='row p-3 text-info'><div class='col'>total time-filled blackstones: " + sumBlackstones + "</div><div class='col'>total failstacks needed: " + JSON.stringify(sumFailstacks) + "</div></div>";
+            document.getElementById('output').innerHTML += multiDetail;
         }
+
+        $(document).ready(function() {
+            $("#run1").click(function() {
+                runSim(1);
+            });
+            $("#run7").click(function() {
+                runSim(7);
+            });
+        });
     </script>
 </head>
 
 <body>
-
+    <div class="container">
+        <div class="row">
+            <div class="col mt-3">
+                <button id="run1" type="button" class="btn btn-block btn-primary p-3">Run 1</button>
+            </div>
+            <div class="col mt-3">
+                <button id="run7" type="button" class="btn btn-block btn-success p-3">Run 7</button>
+            </div>
+        </div>
+        <div class="row">
+            <div id="output" class="col mt-3">
+            </div>
+        </div>
 </body>
 
 </html>
