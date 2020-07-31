@@ -123,6 +123,11 @@
             return bestSlot;
         }
 
+        function percentile(data, p) {
+            var pos = Math.floor((data.length - 1) * p / 100);
+            return data[pos];
+        }
+
         function runSim(count) {
             document.getElementById('output').innerHTML = "";
             failSlots = [0, 0, 0, 0, 0, 0];
@@ -144,10 +149,15 @@
             };
             sumBlackstones = 0;
             multiDetail = "";
+            multiRun = [];
 
             var i = 0;
+            var t0 = new Date().getTime();
             for (i = 0; i < count; i++) {
                 item = 15;
+                if (new Date().getTime() - t0 > 60000) {
+                    break;
+                }
 
                 blackstones = 0;
                 currentSlot = 0;
@@ -204,6 +214,7 @@
                 }
 
                 sumBlackstones += blackstones;
+                multiRun.push(blackstones);
                 sumFailstacks[10] += createdFailstack[10];
                 sumFailstacks[15] += createdFailstack[15];
                 sumFailstacks[20] += createdFailstack[20];
@@ -212,8 +223,25 @@
                 sumFailstacks[60] += createdFailstack[60];
             }
 
-            document.getElementById('output').innerHTML += "<div class='row p-3 text-info'><div class='col'>total time-filled blackstones: " + sumBlackstones + "</div><div class='col'>total failstacks needed: " + JSON.stringify(sumFailstacks) + "</div></div>";
-            document.getElementById('output').innerHTML += multiDetail;
+            if (count == 1000000) {
+                multiRun = multiRun.sort(function(a, b) {
+                    return a - b
+                });
+                t1 = new Date().getTime();
+                elapsed = (t1 - t0) / 1000;
+
+                document.getElementById('output').innerHTML += "<div class='row text-info'>" + multiRun.length + " runs in " + elapsed + " seconds</div>";
+                document.getElementById('output').innerHTML += "<div class='row text-danger'>max: " + multiRun[multiRun.length - 1] + "</div>";
+                document.getElementById('output').innerHTML += "<div class='row text-danger'>p99: " + percentile(multiRun, 99) + "</div>";
+                document.getElementById('output').innerHTML += "<div class='row text-warning'>p75: " + percentile(multiRun, 75) + "</div>";
+                document.getElementById('output').innerHTML += "<div class='row text-primary'>p50: " + percentile(multiRun, 50) + "</div>";
+                document.getElementById('output').innerHTML += "<div class='row text-success'>p25: " + percentile(multiRun, 25) + "</div>";
+                document.getElementById('output').innerHTML += "<div class='row text-success'>p1: " + percentile(multiRun, 1) + "</div>";
+                document.getElementById('output').innerHTML += "<div class='row text-success'>min: " + multiRun[0] + "</div>";
+            } else {
+                document.getElementById('output').innerHTML += "<div class='row p-3 text-success'><div class='col'>total time-filled blackstones: " + sumBlackstones + "</div><div class='col'>total failstacks needed: " + JSON.stringify(sumFailstacks) + "</div></div>";
+                document.getElementById('output').innerHTML += multiDetail;
+            }
         }
 
         $(document).ready(function() {
@@ -222,6 +250,9 @@
             });
             $("#run7").click(function() {
                 runSim(7);
+            });
+            $("#runAlot").click(function() {
+                runSim(1000000);
             });
         });
     </script>
@@ -235,6 +266,9 @@
             </div>
             <div class="col mt-3">
                 <button id="run7" type="button" class="btn btn-block btn-success p-3">Run 7</button>
+            </div>
+            <div class="col mt-3">
+                <button id="runAlot" type="button" class="btn btn-block btn-warning p-3">Run a lot</button>
             </div>
         </div>
         <div class="row">
